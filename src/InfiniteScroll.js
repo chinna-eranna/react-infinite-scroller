@@ -191,8 +191,10 @@ export default class InfiniteScroll extends Component {
     const el = this.scrollComponent;
     const scrollEl = window;
     const parentNode = this.getParentElement(el);
-
+    let direction = 'bottom';
     let offset;
+    let bottomOffset;
+    let topOffset;
     if (this.props.useWindow) {
       const doc =
         document.documentElement || document.body.parentNode || document.body;
@@ -210,19 +212,40 @@ export default class InfiniteScroll extends Component {
     } else {
       offset = el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight;
     }
+    bottomOffset =
+      el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight;
+    topOffset = parentNode.scrollTop;
 
     // Here we make sure the element is visible as well as checking the offset
     if (
-      offset < Number(this.props.threshold) &&
-      (el && el.offsetParent !== null)
+      bottomOffset < Number(this.props.threshold) &&
+      el &&
+      el.offsetParent !== null
     ) {
       this.detachScrollListener();
       this.beforeScrollHeight = parentNode.scrollHeight;
       this.beforeScrollTop = parentNode.scrollTop;
       // Call loadMore after detachScrollListener to allow for non-async loadMore functions
       if (typeof this.props.loadMore === 'function') {
-        this.props.loadMore((this.pageLoaded += 1));
+        this.props.loadMore((this.pageLoaded += 1), 'bottom');
         this.loadMore = true;
+        return;
+      }
+    }
+
+    if (
+      topOffset < Number(this.props.threshold) &&
+      el &&
+      el.offsetParent !== null
+    ) {
+      this.detachScrollListener();
+      this.beforeScrollHeight = parentNode.scrollHeight;
+      this.beforeScrollTop = parentNode.scrollTop;
+      // Call loadMore after detachScrollListener to allow for non-async loadMore functions
+      if (typeof this.props.loadMore === 'function') {
+        this.props.loadMore((this.pageLoaded += 1), 'top');
+        this.loadMore = true;
+        return;
       }
     }
   }
